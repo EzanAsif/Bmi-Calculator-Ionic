@@ -1,5 +1,6 @@
-import React, {useRef} from 'react'
-
+import React, { useRef, useState } from "react";
+import BmiBtns from "./components/BmiBtns";
+import BmiResult from "./components/BmiResult";
 import {
   IonApp,
   IonHeader,
@@ -14,6 +15,9 @@ import {
   IonIcon,
   IonButton,
   IonGrid,
+  IonCard,
+  IonCardContent,
+  IonAlert,
 } from "@ionic/react";
 
 import { calculatorOutline, refreshOutline } from "ionicons/icons";
@@ -38,35 +42,51 @@ import "@ionic/react/css/display.css";
 import "./theme/variables.css";
 
 const App: React.FC = () => {
+  const [result, setResult] = useState<Number>(0);
+  const [error, setError] = useState<Boolean>(false);
 
-  const weightInpRef = useRef <HTMLIonInputElement> (null);
-  const heightInpRef = useRef <HTMLIonInputElement>(null);
+  const weightInpRef = useRef<HTMLIonInputElement>(null);
+  const heightInpRef = useRef<HTMLIonInputElement>(null);
 
-  const calcBmi  = () => {
-    const enteredWeight  = +weightInpRef.current!.value!;
+  const calcBmi = () => {
+    const enteredWeight = weightInpRef.current!.value;
     // by default typescrpt adds ? here as a short form of
     // ternary operator to check if the value is null or not
     // but in our case btn will only be click when there will
     // be some value hence ! will never be null it can be empty string
     // but never null
     // And + to conv string to int
-    const enteredHeight = +weightInpRef.current!.value!;
+    const enteredHeight = weightInpRef.current!.value;
 
-    
+    // checking if they are not null
+    if (
+      !enteredHeight ||
+      !enteredWeight ||
+      +enteredHeight <= 0 ||
+      +enteredWeight <= 0
+    ) {
+      setError(true)
+      return;
+    }
 
-    const bmi = enteredWeight / (enteredHeight * enteredHeight);
-
-    console.log(bmi);
-    
-
-  } 
+    const bmi = +enteredWeight / (+enteredHeight * +enteredHeight);
+    setResult(bmi);
+  };
   const resetInp = () => {
-    weightInpRef.current!.value = '';
-    heightInpRef.current!.value = '';
-
-  }
+    weightInpRef.current!.value = "";
+    heightInpRef.current!.value = "";
+  };
 
   return (
+    <>
+    <IonAlert
+      isOpen = {!!error}   //!! converts to boolean
+      message = "Please enter a valid (non-negative) input number."
+      buttons = {[{
+        text : 'Okay',
+        handler : () => setError(false)
+      }]}
+    />
     <IonApp>
       <IonHeader>
         <IonToolbar>
@@ -79,7 +99,7 @@ const App: React.FC = () => {
             <IonCol>
               <IonItem>
                 <IonLabel position="floating">Your Height</IonLabel>
-                <IonInput ref = {heightInpRef}></IonInput>
+                <IonInput ref={heightInpRef}></IonInput>
               </IonItem>
             </IonCol>
           </IonRow>
@@ -87,30 +107,16 @@ const App: React.FC = () => {
             <IonCol>
               <IonItem>
                 <IonLabel position="floating">Your Weight</IonLabel>
-                <IonInput ref = {weightInpRef}></IonInput>
+                <IonInput ref={weightInpRef}></IonInput>
               </IonItem>
             </IonCol>
           </IonRow>
-          <IonRow>
-            <IonCol className="ion-text-left">
-              <IonButton onClick = {calcBmi}>
-                <IonIcon icon={calculatorOutline} slot="start" />
-                Calculate
-              </IonButton>
-            </IonCol>
-            <IonCol className="ion-text-right">
-              <IonButton onClick = {resetInp}>
-                <IonIcon icon={refreshOutline} slot="start" />
-                Reset
-              </IonButton>
-            </IonCol>
-          </IonRow>
-          <IonRow>
-            <IonCol></IonCol>
-          </IonRow>
+          <BmiBtns onCalc={calcBmi} onReset={resetInp} />
+          <BmiResult result={result} />
         </IonGrid>
       </IonContent>
     </IonApp>
+    </>
   );
 };
 
